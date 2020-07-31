@@ -1,19 +1,30 @@
 'use strict';
 
-const { join } = require('path');
+const {
+  join
+} = require('path');
 const express = require('express');
 const createError = require('http-errors');
 const logger = require('morgan');
 const sassMiddleware = require('node-sass-middleware');
 const serveFavicon = require('serve-favicon');
 const indexRouter = require('./routes/index');
-
+const hbs = require('hbs');
+const hbsJsonHelper = require('hbs-json');
 const app = express();
 
 app.set('views', join(__dirname, 'views'));
 app.set('view engine', 'hbs');
 
+// Make env variables available to templates
+app.use((req, res, next) => {
+  res.locals.environmentVariables = process.env;
+  next();
+});
+
 app.use(serveFavicon(join(__dirname, 'public/images', 'favicon.ico')));
+hbs.registerHelper('json', hbsJsonHelper);
+
 app.use(
   sassMiddleware({
     src: join(__dirname, 'public'),
@@ -25,7 +36,9 @@ app.use(
 );
 app.use(express.static(join(__dirname, 'public')));
 app.use(logger('dev'));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({
+  extended: true
+}));
 
 app.use('/', indexRouter);
 
